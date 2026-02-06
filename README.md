@@ -6,6 +6,12 @@
 
 A Windows system information utility written in **C** with a **HolyC** syntax demonstration.
 
+## Why?
+
+Checking system info across different Windows menus is stressful — Task Manager for processes, Settings for specs, Control Panel for this and that. This tool shows everything in one place.
+
+The HolyC version exists out of reverence for **Terry A. Davis**, the genius behind TempleOS. 🙏
+
 ## Features
 
 | Module | Description |
