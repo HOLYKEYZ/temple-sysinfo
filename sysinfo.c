@@ -5,6 +5,8 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <windows.h>
 
 /* ============================================
@@ -15,55 +17,53 @@ void print_cpu_info(void) {
     GetSystemInfo(&si);
     
     printf("\n");
-    printf("  ╔═══════════════════════════════════════╗\n");
-    printf("  ║           CPU INFORMATION             ║\n");
-    printf("  ╠═══════════════════════════════════════╣\n");
+    printf("  +=========================================+\n");
+    printf("  |           CPU INFORMATION              |\n");
+    printf("  +=========================================+\n");
     
-    char *arch;
-    switch (si.wProcessorArchitecture) {
-        case PROCESSOR_ARCHITECTURE_AMD64: arch = "x64 (AMD64)"; break;
-        case PROCESSOR_ARCHITECTURE_INTEL: arch = "x86 (Intel)"; break;
-        case PROCESSOR_ARCHITECTURE_ARM:   arch = "ARM"; break;
-        default: arch = "Unknown"; break;
-    }
+    char *arch = "Unknown";
+    if (si.wProcessorArchitecture == 9) arch = "x64 (AMD64)";
+    else if (si.wProcessorArchitecture == 0) arch = "x86 (Intel)";
+    else if (si.wProcessorArchitecture == 5) arch = "ARM";
     
-    printf("  ║  Architecture: %-22s  ║\n", arch);
-    printf("  ║  Processors:   %-22lu  ║\n", si.dwNumberOfProcessors);
-    printf("  ║  Page Size:    %-22lu  ║\n", si.dwPageSize);
-    printf("  ╚═══════════════════════════════════════╝\n");
+    printf("  |  Architecture: %-24s|\n", arch);
+    printf("  |  Processors:   %-24lu|\n", si.dwNumberOfProcessors);
+    printf("  |  Page Size:    %-24lu|\n", si.dwPageSize);
+    printf("  +=========================================+\n");
 }
 
 /* ============================================
- * Memory Info
+ * Memory Info (using older API for TCC compat)
  * ============================================ */
 void print_memory_info(void) {
-    MEMORYSTATUSEX ms;
+    MEMORYSTATUS ms;
     ms.dwLength = sizeof(ms);
-    GlobalMemoryStatusEx(&ms);
+    GlobalMemoryStatus(&ms);
     
-    double total_gb = (double)ms.ullTotalPhys / (1024.0 * 1024.0 * 1024.0);
-    double avail_gb = (double)ms.ullAvailPhys / (1024.0 * 1024.0 * 1024.0);
-    double used_gb = total_gb - avail_gb;
+    double total_mb = (double)ms.dwTotalPhys / (1024.0 * 1024.0);
+    double avail_mb = (double)ms.dwAvailPhys / (1024.0 * 1024.0);
+    double used_mb = total_mb - avail_mb;
     int percent_used = (int)ms.dwMemoryLoad;
     
     printf("\n");
-    printf("  ╔═══════════════════════════════════════╗\n");
-    printf("  ║          MEMORY INFORMATION           ║\n");
-    printf("  ╠═══════════════════════════════════════╣\n");
-    printf("  ║  Total RAM:    %-6.2f GB              ║\n", total_gb);
-    printf("  ║  Available:    %-6.2f GB              ║\n", avail_gb);
-    printf("  ║  Used:         %-6.2f GB (%d%%)        ║\n", used_gb, percent_used);
-    printf("  ║                                       ║\n");
-    printf("  ║  [");
+    printf("  +=========================================+\n");
+    printf("  |          MEMORY INFORMATION            |\n");
+    printf("  +=========================================+\n");
+    printf("  |  Total RAM:    %-7.0f MB              |\n", total_mb);
+    printf("  |  Available:    %-7.0f MB              |\n", avail_mb);
+    printf("  |  Used:         %-7.0f MB (%d%%)        |\n", used_mb, percent_used);
+    printf("  |                                        |\n");
+    printf("  |  [");
     
     int bar_len = 30;
     int filled = (percent_used * bar_len) / 100;
-    for (int i = 0; i < bar_len; i++) {
+    int i;
+    for (i = 0; i < bar_len; i++) {
         if (i < filled) printf("#");
         else printf("-");
     }
-    printf("] ║\n");
-    printf("  ╚═══════════════════════════════════════╝\n");
+    printf("]  |\n");
+    printf("  +=========================================+\n");
 }
 
 /* ============================================
@@ -71,38 +71,42 @@ void print_memory_info(void) {
  * ============================================ */
 void print_disk_info(void) {
     printf("\n");
-    printf("  ╔═══════════════════════════════════════╗\n");
-    printf("  ║           DISK INFORMATION            ║\n");
-    printf("  ╠═══════════════════════════════════════╣\n");
+    printf("  +=========================================+\n");
+    printf("  |           DISK INFORMATION             |\n");
+    printf("  +=========================================+\n");
     
-    char drives[256];
-    GetLogicalDriveStringsA(256, drives);
+    /* Check common drive letters */
+    char drive_letter;
+    char drive_path[4];
+    DWORD sectors_per_cluster, bytes_per_sector, free_clusters, total_clusters;
     
-    char *drive = drives;
-    while (*drive) {
-        ULARGE_INTEGER free_bytes, total_bytes, total_free;
+    for (drive_letter = 'C'; drive_letter <= 'Z'; drive_letter++) {
+        sprintf(drive_path, "%c:\\", drive_letter);
         
-        if (GetDiskFreeSpaceExA(drive, &free_bytes, &total_bytes, &total_free)) {
-            double total_gb = (double)total_bytes.QuadPart / (1024.0 * 1024.0 * 1024.0);
-            double free_gb = (double)free_bytes.QuadPart / (1024.0 * 1024.0 * 1024.0);
-            double used_gb = total_gb - free_gb;
-            int percent = (int)((used_gb / total_gb) * 100);
-            
-            printf("  ║  Drive %c:                              ║\n", drive[0]);
-            printf("  ║    Total: %7.1f GB | Free: %6.1f GB ║\n", total_gb, free_gb);
-            printf("  ║    [");
-            int bar_len = 28;
-            int filled = (percent * bar_len) / 100;
-            for (int i = 0; i < bar_len; i++) {
-                if (i < filled) printf("#");
-                else printf("-");
+        if (GetDriveTypeA(drive_path) == DRIVE_FIXED) {
+            if (GetDiskFreeSpaceA(drive_path, &sectors_per_cluster, &bytes_per_sector, 
+                                  &free_clusters, &total_clusters)) {
+                double bytes_per_cluster = (double)sectors_per_cluster * bytes_per_sector;
+                double total_gb = (bytes_per_cluster * total_clusters) / (1024.0 * 1024.0 * 1024.0);
+                double free_gb = (bytes_per_cluster * free_clusters) / (1024.0 * 1024.0 * 1024.0);
+                double used_gb = total_gb - free_gb;
+                int percent = (total_gb > 0) ? (int)((used_gb / total_gb) * 100) : 0;
+                
+                printf("  |  Drive %c:                               |\n", drive_letter);
+                printf("  |    Total: %6.1f GB | Free: %6.1f GB   |\n", total_gb, free_gb);
+                printf("  |    [");
+                int bar_len = 28;
+                int filled = (percent * bar_len) / 100;
+                int i;
+                for (i = 0; i < bar_len; i++) {
+                    if (i < filled) printf("#");
+                    else printf("-");
+                }
+                printf("] %3d%%|\n", percent);
             }
-            printf("] %3d%% ║\n", percent);
         }
-        
-        drive += strlen(drive) + 1;
     }
-    printf("  ╚═══════════════════════════════════════╝\n");
+    printf("  +=========================================+\n");
 }
 
 /* ============================================
@@ -110,33 +114,33 @@ void print_disk_info(void) {
  * ============================================ */
 void print_os_info(void) {
     printf("\n");
-    printf("  ╔═══════════════════════════════════════╗\n");
-    printf("  ║         SYSTEM INFORMATION            ║\n");
-    printf("  ╠═══════════════════════════════════════╣\n");
+    printf("  +=========================================+\n");
+    printf("  |         SYSTEM INFORMATION             |\n");
+    printf("  +=========================================+\n");
     
-    // Computer name
-    char computer_name[256];
+    /* Computer name */
+    char computer_name[256] = "Unknown";
     DWORD size = sizeof(computer_name);
     GetComputerNameA(computer_name, &size);
-    printf("  ║  Computer:     %-22s  ║\n", computer_name);
+    printf("  |  Computer:     %-24s|\n", computer_name);
     
-    // User name
-    char user_name[256];
+    /* User name */
+    char user_name[256] = "Unknown";
     size = sizeof(user_name);
     GetUserNameA(user_name, &size);
-    printf("  ║  User:         %-22s  ║\n", user_name);
+    printf("  |  User:         %-24s|\n", user_name);
     
-    // Windows directory
-    char win_dir[256];
+    /* Windows directory */
+    char win_dir[256] = "";
     GetWindowsDirectoryA(win_dir, sizeof(win_dir));
-    printf("  ║  Windows Dir:  %-22s  ║\n", win_dir);
+    printf("  |  Windows Dir:  %-24s|\n", win_dir);
     
-    // System directory  
-    char sys_dir[256];
+    /* System directory */
+    char sys_dir[256] = "";
     GetSystemDirectoryA(sys_dir, sizeof(sys_dir));
-    printf("  ║  System Dir:   %-22s  ║\n", sys_dir);
+    printf("  |  System Dir:   %-24s|\n", sys_dir);
     
-    printf("  ╚═══════════════════════════════════════╝\n");
+    printf("  +=========================================+\n");
 }
 
 /* ============================================
@@ -144,12 +148,12 @@ void print_os_info(void) {
  * ============================================ */
 int main(void) {
     printf("\n");
-    printf("  ╔═══════════════════════════════════════╗\n");
-    printf("  ║                                       ║\n");
-    printf("  ║      SYSTEM INFORMATION TOOL          ║\n");
-    printf("  ║           by HolyKeyz                 ║\n");
-    printf("  ║                                       ║\n");
-    printf("  ╚═══════════════════════════════════════╝\n");
+    printf("  +=========================================+\n");
+    printf("  |                                         |\n");
+    printf("  |      SYSTEM INFORMATION TOOL           |\n");
+    printf("  |           by HolyKeyz                  |\n");
+    printf("  |                                         |\n");
+    printf("  +=========================================+\n");
     
     print_os_info();
     print_cpu_info();
