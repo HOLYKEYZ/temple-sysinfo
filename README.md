@@ -38,11 +38,12 @@ tcc -o sysinfo.exe sysinfo.c -lkernel32 -ladvapi32 -luser32 -lgdi32
 ## Project Structure
 
 ```
-├── sysinfo.c       # C source code
-├── sysinfo.exe     # Compiled executable
+├── sysinfo.c            # C source (Windows)
+├── sysinfo.exe          # Compiled executable
 ├── holyc/
-│   └── sysinfo.HC  # HolyC syntax demo
-├── holyc.png       # HolyC logo
+│   ├── sysinfo.HC       # HolyC syntax demo
+│   └── temple_sysinfo.HC # Real TempleOS version
+├── holyc.png            # HolyC logo
 └── README.md
 ```
 
