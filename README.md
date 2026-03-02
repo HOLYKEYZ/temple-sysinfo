@@ -28,10 +28,23 @@ The HolyC version exists out of reverence for **Terry A. Davis**, the genius beh
 
 ## Build & Run
 
-Requires [TCC (Tiny C Compiler)](https://bellard.org/tcc/):
+This project requires a C compiler for Windows. [TCC (Tiny C Compiler)](https://bellard.org/tcc/) is recommended. Alternatively, you can use MinGW GCC.
 
+### Build
+
+Using TCC:
 ```bash
 tcc -o sysinfo.exe sysinfo.c -lkernel32 -ladvapi32 -luser32 -lgdi32
+```
+Using MinGW GCC:
+```bash
+gcc -o sysinfo.exe sysinfo.c -lkernel32 -ladvapi32 -luser32 -lgdi32
+```
+
+### Run
+
+After building, execute the compiled program:
+```bash
 .\sysinfo.exe
 ```
 
