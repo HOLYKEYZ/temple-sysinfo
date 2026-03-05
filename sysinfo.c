@@ -77,12 +77,12 @@ void print_cpu_info(void) {
  * Memory Info
  * ============================================ */
 void print_memory_info(void) {
-    MEMORYSTATUS ms;
-    ms.dwLength = sizeof(ms);
-    GlobalMemoryStatus(&ms);
-    
-    double total_mb = (double)ms.dwTotalPhys / (1024.0 * 1024.0);
-    double avail_mb = (double)ms.dwAvailPhys / (1024.0 * 1024.0);
+    MEMORYSTATUSEX ms;
+    ms.dwLength = sizeof(MEMORYSTATUSEX);
+    GlobalMemoryStatusEx(&ms);
+
+    double total_mb = (double)ms.ullTotalPhys / (1024.0 * 1024.0);
+    double avail_mb = (double)ms.ullAvailPhys / (1024.0 * 1024.0);
     double used_mb = total_mb - avail_mb;
     int percent_used = (int)ms.dwMemoryLoad;
     
