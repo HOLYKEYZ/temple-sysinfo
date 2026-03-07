@@ -3,7 +3,7 @@
  * A comprehensive Windows system information utility
  * by HolyKeyz
  * 
- * Compile: tcc -o sysinfo.exe sysinfo.c -lkernel32 -ladvapi32
+ * Compile: tcc -o sysinfo.exe sysinfo.c -lkernel32 -ladvapi32 -luser32 -lgdi32
  */
 
 #include <stdio.h>
