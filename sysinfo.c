@@ -227,7 +227,9 @@ void print_process_list(void) {
     }
     CloseHandle(snapshot);
     
-    printf("  |  ... and %d more processes              |\n", total - 10);
+            if (total > count) {
+                printf("  |  ... and %d more processes              |\n", total - count);
+            }
     print_footer();
 }
 
