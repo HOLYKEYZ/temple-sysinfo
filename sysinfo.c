@@ -11,6 +11,7 @@
 #include <string.h>
 #include <windows.h>
 #include <tlhelp32.h>
+#include <winreg.h>
 
 /* ============================================
  * Helper: Print separator
@@ -69,6 +70,16 @@ void print_cpu_info(void) {
     printf("  |  Architecture: %-24s|\n", arch);
     printf("  |  Processors:   %-24lu|\n", si.dwNumberOfProcessors);
     printf("  |  Page Size:    %-24lu|\n", si.dwPageSize);
+    
+    char cpu_name[256] = "Unknown";
+    DWORD cpu_name_size = sizeof(cpu_name);
+    HKEY key;
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0, KEY_READ, &key) == ERROR_SUCCESS) {
+        if (RegQueryValueExA(key, "ProcessorNameString", NULL, NULL, (LPBYTE)cpu_name, &cpu_name_size) == ERROR_SUCCESS) {
+            printf("  |  Model:         %-24s|\n", cpu_name);
+        }
+        RegCloseKey(key);
+    }
     
     print_footer();
 }
