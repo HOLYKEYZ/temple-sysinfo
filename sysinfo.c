@@ -187,11 +187,9 @@ void print_env_vars(void) {
             /* Truncate long values */
             char truncated[30];
             if (strlen(val) > 28) {
-                strncpy(truncated, val, 25);
-                truncated[25] = '\0';
-                strcat(truncated, "...");
+                snprintf(truncated, sizeof(truncated), "%-.25s...", val);
             } else {
-                strcpy(truncated, val);
+                snprintf(truncated, sizeof(truncated), "%s", val);
             }
             printf("  |  %-10s: %-26s|\n", vars[i], truncated);
         }
