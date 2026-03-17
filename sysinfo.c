@@ -167,11 +167,31 @@ void print_uptime(void) {
     hours %= 24;
     
     print_header("SYSTEM UPTIME");
-    printf("  |  Uptime: %lu days, %lu hrs, %lu min, %lu sec   |\n", 
+    printf("  |  Uptime: %lu days, %lu hrs, %lu min, %lu sec   |
+", 
            days, hours, minutes, seconds);
     print_footer();
 }
 
+void print_power_info(void) {
+    print_header("POWER INFORMATION");
+    
+    SYSTEM_POWER_STATUS sps;
+    if (GetSystemPowerStatus(&sps)) {
+        if (sps.ACLineStatus == 1) {
+            printf("  |  Power Status: AC Power\n");
+        } else if (sps.ACLineStatus == 0) {
+            printf("  |  Power Status: Battery Power\n");
+            printf("  |  Battery Life Percent: %d%%\n", sps.BatteryLifePercent);
+            if (sps.BatteryLifeTime != -1) {
+                printf("  |  Battery Life Time: %lu seconds\n", sps.BatteryLifeTime);
+            } else {
+                printf("  |  Battery Life Time: Unknown\n");
+            }
+        }
+    }
+    print_footer();
+}
 /* ============================================
  * Environment Variables (selected)
  * ============================================ */
@@ -191,12 +211,28 @@ void print_env_vars(void) {
             } else {
                 snprintf(truncated, sizeof(truncated), "%s", val);
             }
-            printf("  |  %-10s: %-26s|\n", vars[i], truncated);
+            printf("  |  %-10s: %-26s|
+", vars[i], truncated);
         }
     }
     print_footer();
 }
 
+void print_display_info(void) {
+    print_header("DISPLAY INFORMATION");
+    
+    int width = GetSystemMetrics(SM_CXSCREEN);
+    int height = GetSystemMetrics(SM_CYSCREEN);
+    printf("  |  Resolution: %dx%d\n", width, height);
+    
+    HDC hdc = GetDC(NULL);
+    if (hdc) {
+        int bitsPerPixel = GetDeviceCaps(hdc, BITSPIXEL);
+        printf("  |  Color Depth: %d bits\n", bitsPerPixel);
+        ReleaseDC(NULL, hdc);
+    }
+    print_footer();
+}
 /* ============================================
  * Process List (top 10 by name)
  * ============================================ */
@@ -314,15 +350,17 @@ void print_display_info(void) {
  * Main Entry Point
  * ============================================ */
 int main(void) {
-    printf("\n");
-    printf("  +=========================================+\n");
-    printf("  |                                         |\n");
-    printf("  |   SYSTEM INFORMATION TOOL - ENHANCED   |\n");
-    printf("  |            by HolyKeyz                 |\n");
-    printf("  |                                         |\n");
-    printf("  +=========================================+\n");
-    
     print_os_info();
+    print_cpu_info();
+    print_memory_info();
+    print_disk_info();
+    print_uptime();
+    print_power_info();
+    print_display_info();
+    print_env_vars();
+    print_process_list();
+    return 0;
+}
     print_cpu_info();
     print_memory_info();
     print_disk_info();
