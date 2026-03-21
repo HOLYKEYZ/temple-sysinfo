@@ -179,15 +179,23 @@ void print_power_info(void) {
     SYSTEM_POWER_STATUS sps;
     if (GetSystemPowerStatus(&sps)) {
         if (sps.ACLineStatus == 1) {
-            printf("  |  Power Status: AC Power\n");
+            printf("  |  Power Status: AC Power       |
+");
         } else if (sps.ACLineStatus == 0) {
-            printf("  |  Power Status: Battery Power\n");
-            printf("  |  Battery Life Percent: %d%%\n", sps.BatteryLifePercent);
+            printf("  |  Power Status: Battery Power   |
+");
+            printf("  |  Battery Life Percent: %d%%       |
+", sps.BatteryLifePercent);
             if (sps.BatteryLifeTime != -1) {
-                printf("  |  Battery Life Time: %lu seconds\n", sps.BatteryLifeTime);
+                printf("  |  Battery Life Time: %lu seconds   |
+", sps.BatteryLifeTime);
             } else {
-                printf("  |  Battery Life Time: Unknown\n");
+                printf("  |  Battery Life Time: Unknown     |
+");
             }
+        } else if (sps.ACLineStatus == 255) {
+            printf("  |  Power Status: Unknown         |
+");
         }
     }
     print_footer();
