@@ -130,10 +130,12 @@ void print_disk_info(void) {
         if (GetDriveTypeA(drive_path) == DRIVE_FIXED) {
             if (GetDiskFreeSpaceA(drive_path, &sectors_per_cluster, &bytes_per_sector, 
                                   &free_clusters, &total_clusters)) {
-                double bytes_per_cluster = (double)sectors_per_cluster * bytes_per_sector;
-                double total_gb = (bytes_per_cluster * total_clusters) / (1024.0 * 1024.0 * 1024.0);
-                double free_gb = (bytes_per_cluster * free_clusters) / (1024.0 * 1024.0 * 1024.0);
-                int percent = (total_gb > 0) ? (int)(((total_gb - free_gb) / total_gb) * 100) : 0;
+                unsigned __int64 bytes_per_cluster = (unsigned __int64)sectors_per_cluster * bytes_per_sector;
+                unsigned __int64 total_bytes = bytes_per_cluster * total_clusters;
+                unsigned __int64 free_bytes = bytes_per_cluster * free_clusters;
+                double total_gb = (double)total_bytes / (1024.0 * 1024.0 * 1024.0);
+                double free_gb = (double)free_bytes / (1024.0 * 1024.0 * 1024.0);
+                int percent = (total_bytes > 0) ? (int)(((total_bytes - free_bytes) * 100) / total_bytes) : 0;
                 
                 printf("  |  Drive %c: %6.1fGB total, %6.1fGB free |\n", 
                        drive_letter, total_gb, free_gb);
